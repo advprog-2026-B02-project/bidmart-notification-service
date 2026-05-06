@@ -1,6 +1,5 @@
 package id.ac.ui.cs.advprog.bidmart.notifications.event;
 
-import id.ac.ui.cs.advprog.bidmart.common.event.WinnerDeterminedEvent;
 import id.ac.ui.cs.advprog.bidmart.notifications.model.NotificationType;
 import id.ac.ui.cs.advprog.bidmart.notifications.service.NotificationService;
 import org.junit.jupiter.api.Test;
