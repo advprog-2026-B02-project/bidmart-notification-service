@@ -3,16 +3,23 @@ package id.ac.ui.cs.advprog.bidmart.notifications.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.bidmart.notifications.dto.NotificationListResponse;
+import id.ac.ui.cs.advprog.bidmart.notifications.dto.NotificationPreferenceResponse;
 import id.ac.ui.cs.advprog.bidmart.notifications.dto.NotificationResponse;
 import id.ac.ui.cs.advprog.bidmart.notifications.dto.NotificationSaveResponse;
 import id.ac.ui.cs.advprog.bidmart.notifications.dto.SaveNotification;
+import id.ac.ui.cs.advprog.bidmart.notifications.dto.UpdateNotificationPreferenceRequest;
 import id.ac.ui.cs.advprog.bidmart.notifications.model.Notification;
+import id.ac.ui.cs.advprog.bidmart.notifications.model.NotificationPreference;
+import id.ac.ui.cs.advprog.bidmart.notifications.repository.NotificationPreferenceRepository;
 import id.ac.ui.cs.advprog.bidmart.notifications.repository.NotificationRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -28,11 +35,18 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final ObjectMapper objectMapper;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final NotificationPreferenceRepository preferenceRepository;
 
-    public NotificationServiceImpl(NotificationRepository notificationRepository,
-                                   ObjectMapper objectMapper) {
+    public NotificationServiceImpl(
+            NotificationRepository notificationRepository,
+            ObjectMapper objectMapper,
+            SimpMessagingTemplate messagingTemplate,                
+            NotificationPreferenceRepository preferenceRepository) {
         this.notificationRepository = notificationRepository;
         this.objectMapper = objectMapper;
+        this.messagingTemplate = messagingTemplate;
+        this.preferenceRepository = preferenceRepository;
     }
 
     @Override
@@ -109,12 +123,68 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         Notification saved = notificationRepository.save(notification);
+        pushToUser(saved.getUserId(), toResponseDTO(saved));
         return NotificationSaveResponse.builder()                       
                 .notificationId(saved.getId())
                 .createdAt(saved.getCreatedAt())
                 .build();
     }
 
+    @Override
+    public void pushToUser(UUID userId, NotificationResponse notification) {
+        messagingTemplate.convertAndSendToUser(
+                userId.toString(),
+                "/queue/notifications",
+                notification
+        );
+    }
+
+    @Override
+    public NotificationPreferenceResponse getPreferences(UUID userId) {
+        NotificationPreference pref = preferenceRepository
+                .findById(userId)
+                .orElse(defaultPreference(userId));
+
+        return toPreferenceResponse(pref);
+    }
+
+    @Override
+    public NotificationPreferenceResponse updatePreferences(UUID userId, UpdateNotificationPreferenceRequest request) {
+        NotificationPreference pref = preferenceRepository
+                .findById(userId)
+                .orElse(defaultPreference(userId));
+
+        if (request.getEmail() != null) {
+            if (request.getEmail().getBidPlaced() != null)
+                pref.setEmailBidPlaced(request.getEmail().getBidPlaced());
+            if (request.getEmail().getOutbid() != null)
+                pref.setEmailOutbid(request.getEmail().getOutbid());
+            if (request.getEmail().getAuctionWon() != null)
+                pref.setEmailAuctionWon(request.getEmail().getAuctionWon());
+            if (request.getEmail().getOrderUpdate() != null)
+                pref.setEmailOrderUpdate(request.getEmail().getOrderUpdate());
+        }
+
+        if (request.getPush() != null) {
+            if (request.getPush().getBidPlaced() != null)
+                pref.setPushBidPlaced(request.getPush().getBidPlaced());
+            if (request.getPush().getOutbid() != null)
+                pref.setPushOutbid(request.getPush().getOutbid());
+            if (request.getPush().getAuctionWon() != null)
+                pref.setPushAuctionWon(request.getPush().getAuctionWon());
+            if (request.getPush().getOrderUpdate() != null)
+                pref.setPushOrderUpdate(request.getPush().getOrderUpdate());
+        }
+
+        preferenceRepository.save(pref);
+        return toPreferenceResponse(pref);
+    }
+
+    private NotificationPreference defaultPreference(UUID userId) {
+        NotificationPreference pref = new NotificationPreference();
+        pref.setUserId(userId);
+        return pref;
+    }
     private NotificationResponse toResponseDTO(Notification notification) {
         Map<String, Object> dataMap = null;
         if (notification.getData() != null) {
@@ -134,5 +204,22 @@ public class NotificationServiceImpl implements NotificationService {
                 .read(Boolean.TRUE.equals(notification.getIsRead()))
                 .createdAt(notification.getCreatedAt())
                 .build();
+    } 
+
+    private NotificationPreferenceResponse toPreferenceResponse(NotificationPreference pref) {
+    return NotificationPreferenceResponse.builder()
+            .email(NotificationPreferenceResponse.EmailPreference.builder()
+                    .bidPlaced(pref.isEmailBidPlaced())
+                    .outbid(pref.isEmailOutbid())
+                    .auctionWon(pref.isEmailAuctionWon())
+                    .orderUpdate(pref.isEmailOrderUpdate())
+                    .build())
+            .push(NotificationPreferenceResponse.PushPreference.builder()
+                    .bidPlaced(pref.isPushBidPlaced())
+                    .outbid(pref.isPushOutbid())
+                    .auctionWon(pref.isPushAuctionWon())
+                    .orderUpdate(pref.isPushOrderUpdate())
+                    .build())
+            .build();
     }
 }
