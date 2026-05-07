@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.bidmart.notifications.dto.NotificationListResponse;
 import id.ac.ui.cs.advprog.bidmart.notifications.dto.NotificationResponse;
+import id.ac.ui.cs.advprog.bidmart.notifications.dto.NotificationSaveResponse;
 import id.ac.ui.cs.advprog.bidmart.notifications.dto.SaveNotification;
 import id.ac.ui.cs.advprog.bidmart.notifications.model.Notification;
 import id.ac.ui.cs.advprog.bidmart.notifications.repository.NotificationRepository;
@@ -92,8 +93,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Transactional
-    public void saveNotification(SaveNotification dto) {
+    public NotificationSaveResponse saveNotification(SaveNotification dto) {
         Notification notification = new Notification();
         notification.setUserId(dto.getUserId());
         notification.setType(dto.getType());
@@ -108,7 +108,11 @@ public class NotificationServiceImpl implements NotificationService {
             }
         }
 
-        notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
+        return NotificationSaveResponse.builder()                       
+                .notificationId(saved.getId())
+                .createdAt(saved.getCreatedAt())
+                .build();
     }
 
     private NotificationResponse toResponseDTO(Notification notification) {
