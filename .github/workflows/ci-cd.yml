@@ -1,10 +1,10 @@
-name: Bidding Service CI/CD
+name: Notification Service CI/CD
 
 on:
   push:
-    branches: [ main, staging ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, staging ]
+    branches: [ main ]
 
 jobs:
   build-and-test:
@@ -48,14 +48,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: bidding-test-results
+          name: notification-test-results        # ← ganti
           path: build/reports/tests/
 
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: bidding-coverage-report
+          name: notification-coverage-report     # ← ganti
           path: build/reports/jacoco/
 
   code-quality:
@@ -112,30 +112,11 @@ jobs:
         with:
           args: >
             -Dsonar.organization=advprog-2026-b02-project
-            -Dsonar.projectKey=advprog-2026-B02-project_bidmart-bidding-service
+            -Dsonar.projectKey=advprog-2026-B02-project_bidmart-notification-service
             -Dsonar.sources=src/main/java
             -Dsonar.tests=src/test/java
             -Dsonar.java.binaries=build/classes/java/main
             -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/test/jacocoTestReport.xml
-
-  deploy-staging:
-    name: Deploy to Staging
-    runs-on: ubuntu-latest
-    needs: [ build-and-test, code-quality ]
-    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Dummy Deploy to Staging
-        run: |
-          echo "============================================"
-          echo "  STAGING DEPLOYMENT: BIDDING SERVICE"
-          echo "============================================"
-          echo "All CI checks passed!"
-          echo "[DUMMY] Would deploy Bidding Service to staging..."
-          echo "============================================"
 
   deploy-production:
     name: Deploy to Production
@@ -150,8 +131,8 @@ jobs:
       - name: Dummy Deploy to Production
         run: |
           echo "============================================"
-          echo "  PRODUCTION DEPLOYMENT: BIDDING SERVICE"
+          echo "  PRODUCTION DEPLOYMENT: NOTIFICATION SERVICE"
           echo "============================================"
           echo "All CI checks passed!"
-          echo "[DUMMY] Would deploy Bidding Service to production..."
+          echo "[DUMMY] Would deploy Notification Service to production..."
           echo "============================================"

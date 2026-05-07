@@ -8,7 +8,7 @@ plugins {
 
 group = "id.ac.ui.cs.advprog.bidmart.notifications"
 version = "0.0.1-SNAPSHOT"
-description = "backend bidding microservice"
+description = "backend notifications microservice"
 
 java {
     toolchain {
