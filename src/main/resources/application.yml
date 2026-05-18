@@ -1,6 +1,16 @@
 spring:
   application:
     name: bidmart-notification
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP:notification-service}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://ep-xxxxx-xxxxx-12345.ap-southeast-1.aws.neon.tech/neondb?sslmode=require}
     username: ${DATABASE_USERNAME:neondb_owner}
@@ -22,6 +32,8 @@ app:
   base-url: ${APP_BASE_URL:http://localhost:8085}
   frontend-url: ${APP_FRONTEND_URL:http://localhost:3000}
   service-token: ${SERVICE_TOKEN:internal-service-secret}
+  kafka:
+    notification-topic: ${KAFKA_NOTIFICATION_TOPIC:order.notification-requests}
   client:
     user-url: ${USER_SERVICE_URL:http://localhost:8081}
     bidding-url: ${BIDDING_SERVICE_URL:http://localhost:8082}
@@ -39,6 +51,16 @@ spring:
   config:
     activate:
       on-profile: test
+  kafka:
+    bootstrap-servers: ${spring.embedded.kafka.brokers:localhost:9092}
+    consumer:
+      group-id: notification-service-test
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
   datasource:
     url: jdbc:h2:mem:bidmart_notification_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
     driver-class-name: org.h2.Driver
