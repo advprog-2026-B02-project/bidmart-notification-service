@@ -46,4 +46,4 @@ services:
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       SERVICE_TOKEN: ${SERVICE_TOKEN}
     ports:
-      - "8086:8085"
+      - "8086:8086"
