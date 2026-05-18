@@ -50,6 +50,9 @@ dependencies {
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
     annotationProcessor("org.projectlombok:lombok")
+    
+    // Database migrations
+    implementation("org.flywaydb:flyway-core:9.22.0")
 
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test")
