@@ -24,6 +24,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,6 +34,8 @@ import java.util.UUID;
 
 @Service
 public class NotificationServiceImpl implements NotificationService {
+
+    private static final Logger log = LoggerFactory.getLogger(NotificationServiceImpl.class);
 
     private final NotificationRepository notificationRepository;
     private final ObjectMapper objectMapper;
@@ -123,7 +127,11 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         Notification saved = notificationRepository.save(notification);
-        pushToUser(saved.getUserId(), toResponseDTO(saved));
+        try {
+            pushToUser(saved.getUserId(), toResponseDTO(saved));
+        } catch (RuntimeException ex) {
+            log.warn("Failed to push notification {} to user {}", saved.getId(), saved.getUserId(), ex);
+        }
         return NotificationSaveResponse.builder()                       
                 .notificationId(saved.getId())
                 .createdAt(saved.getCreatedAt())
