@@ -30,20 +30,28 @@ services:
       - "5432:5432"
 
   notification-service:
-    container_name: bidmart-notification-app
     build:
       context: .
       dockerfile: Dockerfile
-    depends_on:
-      - kafka
-      - postgres
+    container_name: bidmart-notification-service
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      KAFKA_NOTIFICATION_TOPIC: order.notification-requests
-      KAFKA_CONSUMER_GROUP: notification-service
-      DATABASE_URL: ${DATABASE_URL}
-      DATABASE_USERNAME: ${DATABASE_USERNAME}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      SERVICE_TOKEN: ${SERVICE_TOKEN}
+      - SPRING_PROFILES_ACTIVE=prod
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_USERNAME=${DATABASE_USERNAME}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN}
+      - APP_BASE_URL=http://notification-service:8086
+      - APP_FRONTEND_URL=http://frontend:3000
+      - USER_SERVICE_URL=http://auth-service:8081
+      - BIDDING_SERVICE_URL=http://bidding-service:8082
+      - CATALOG_SERVICE_URL=http://catalog-service:8083
+      - WALLET_SERVICE_URL=http://wallet-service:8084
+      - ORDER_SERVICE_URL=http://order-service:8085
+    depends_on:
+      kafka:
+        condition: service_started
+      postgres:
+        condition: service_started
     ports:
       - "8086:8086"
