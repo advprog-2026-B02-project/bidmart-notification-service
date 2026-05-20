@@ -1,12 +1,14 @@
 package id.ac.ui.cs.advprog.bidmart.notifications.config;
 
 import id.ac.ui.cs.advprog.bidmart.notifications.consumer.InvalidKafkaNotificationEventException;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.DefaultErrorHandler;
@@ -23,7 +25,24 @@ public class KafkaConsumerConfig {
         ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
         factory.setCommonErrorHandler(notificationKafkaErrorHandler);
+        factory.getContainerProperties().setMissingTopicsFatal(false);
         return factory;
+    }
+
+    @Bean
+    public NewTopic notificationTopic(@Value("${app.kafka.notification-topic}") String notificationTopic) {
+        return TopicBuilder.name(notificationTopic)
+                .partitions(1)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic notificationDeadLetterTopic(@Value("${app.kafka.notification-topic}") String notificationTopic) {
+        return TopicBuilder.name(notificationTopic + ".DLT")
+                .partitions(1)
+                .replicas(1)
+                .build();
     }
 
     @Bean
