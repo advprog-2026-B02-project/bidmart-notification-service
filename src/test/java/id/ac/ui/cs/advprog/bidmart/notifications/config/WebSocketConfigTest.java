@@ -49,6 +49,8 @@ class WebSocketConfigTest {
         verify(prefixedEndpointRegistration).setAllowedOriginPatterns("*");
         verify(endpointRegistration).withSockJS();
         verify(prefixedEndpointRegistration).withSockJS();
+        verify(sockJsRegistration).setSessionCookieNeeded(false);
+        verify(prefixedSockJsRegistration).setSessionCookieNeeded(false);
     }
 
     @Test
