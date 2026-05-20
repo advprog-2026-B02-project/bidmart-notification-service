@@ -30,17 +30,25 @@ class WebSocketConfigTest {
         WebSocketConfig config = new WebSocketConfig(mock(WebSocketAuthInterceptor.class));
         StompEndpointRegistry registry = mock(StompEndpointRegistry.class);
         StompWebSocketEndpointRegistration endpointRegistration = mock(StompWebSocketEndpointRegistration.class);
+        StompWebSocketEndpointRegistration prefixedEndpointRegistration = mock(StompWebSocketEndpointRegistration.class);
         SockJsServiceRegistration sockJsRegistration = mock(SockJsServiceRegistration.class);
+        SockJsServiceRegistration prefixedSockJsRegistration = mock(SockJsServiceRegistration.class);
 
         when(registry.addEndpoint("/ws/notifications")).thenReturn(endpointRegistration);
+        when(registry.addEndpoint("/api/notifications/ws/notifications")).thenReturn(prefixedEndpointRegistration);
         when(endpointRegistration.setAllowedOriginPatterns("*")).thenReturn(endpointRegistration);
+        when(prefixedEndpointRegistration.setAllowedOriginPatterns("*")).thenReturn(prefixedEndpointRegistration);
         when(endpointRegistration.withSockJS()).thenReturn(sockJsRegistration);
+        when(prefixedEndpointRegistration.withSockJS()).thenReturn(prefixedSockJsRegistration);
 
         config.registerStompEndpoints(registry);
 
         verify(registry).addEndpoint("/ws/notifications");
+        verify(registry).addEndpoint("/api/notifications/ws/notifications");
         verify(endpointRegistration).setAllowedOriginPatterns("*");
+        verify(prefixedEndpointRegistration).setAllowedOriginPatterns("*");
         verify(endpointRegistration).withSockJS();
+        verify(prefixedEndpointRegistration).withSockJS();
     }
 
     @Test
