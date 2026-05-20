@@ -13,7 +13,6 @@ import id.ac.ui.cs.advprog.bidmart.notifications.model.NotificationPreference;
 import id.ac.ui.cs.advprog.bidmart.notifications.repository.NotificationPreferenceRepository;
 import id.ac.ui.cs.advprog.bidmart.notifications.repository.NotificationRepository;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
