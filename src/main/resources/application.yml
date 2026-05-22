@@ -5,7 +5,7 @@ spring:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
       group-id: ${KAFKA_CONSUMER_GROUP:notification-service}
-      auto-offset-reset: earliest
+      auto-offset-reset: latest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
@@ -56,7 +56,7 @@ spring:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:29092}
     consumer:
       group-id: ${KAFKA_CONSUMER_GROUP:notification-service}
-      auto-offset-reset: earliest
+      auto-offset-reset: latest
       properties:
         retry.backoff.ms: 1000
         reconnect.backoff.ms: 1000

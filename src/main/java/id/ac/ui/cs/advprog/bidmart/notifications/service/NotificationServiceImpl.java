@@ -27,6 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -67,10 +69,11 @@ public class NotificationServiceImpl implements NotificationService {
 
         long unreadCount = notificationRepository.countByUserIdAndIsRead(userId, false);
 
-        List<NotificationResponse> content = result.getContent()
+        List<NotificationResponse> rawContent = result.getContent()
                 .stream()
                 .map(this::toResponseDTO)
                 .toList();
+        List<NotificationResponse> content = deduplicateByEvent(rawContent);
 
         return NotificationListResponse.builder()
                 .content(content)
@@ -212,6 +215,23 @@ public class NotificationServiceImpl implements NotificationService {
                 .createdAt(notification.getCreatedAt())
                 .build();
     } 
+
+    private List<NotificationResponse> deduplicateByEvent(List<NotificationResponse> notifications) {
+        Map<String, NotificationResponse> deduplicated = new LinkedHashMap<>();
+
+        for (NotificationResponse notification : notifications) {
+            deduplicated.putIfAbsent(notificationKey(notification), notification);
+        }
+
+        return new ArrayList<>(deduplicated.values());
+    }
+
+    private String notificationKey(NotificationResponse notification) {
+        String dataKey = notification.getData() == null
+                ? ""
+                : notification.getData().toString();
+        return notification.getType() + "|" + notification.getTitle() + "|" + notification.getMessage() + "|" + dataKey;
+    }
 
     private NotificationPreferenceResponse toPreferenceResponse(NotificationPreference pref) {
     return NotificationPreferenceResponse.builder()
