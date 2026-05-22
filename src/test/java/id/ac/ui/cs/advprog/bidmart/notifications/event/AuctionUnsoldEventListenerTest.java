@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.bidmart.notifications.event;
 
+import com.fasterxml.jackson.databind.ObjectMapper; 
 import id.ac.ui.cs.advprog.bidmart.notifications.model.NotificationType;
 import id.ac.ui.cs.advprog.bidmart.notifications.service.NotificationService;
 import org.junit.jupiter.api.Test;
@@ -10,9 +11,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AuctionUnsoldEventListenerTest {
@@ -20,16 +23,23 @@ class AuctionUnsoldEventListenerTest {
     @Mock
     private NotificationService notificationService;
 
+    @Mock
+    private ObjectMapper objectMapper;
+
     @InjectMocks
     private AuctionUnsoldEventListener listener;
 
     @Test
-    void onAuctionUnsold_ShouldSaveAuctionLostNotificationToSeller() {
+    void onAuctionUnsold_ShouldSaveAuctionLostNotificationToSeller() throws Exception {
         UUID auctionId = UUID.randomUUID();
         UUID sellerId = UUID.randomUUID();
-        AuctionUnsoldEvent event = new AuctionUnsoldEvent(auctionId, sellerId);
 
-        listener.onAuctionUnsold(event);
+        String jsonPayload = "{\"auctionId\":\"" + auctionId + "\",\"sellerId\":\"" + sellerId + "\"}";
+        AuctionUnsoldEvent mockEvent = new AuctionUnsoldEvent(auctionId, sellerId);
+
+        when(objectMapper.readValue(jsonPayload, AuctionUnsoldEvent.class)).thenReturn(mockEvent);
+
+        listener.onAuctionUnsold(jsonPayload);
 
         verify(notificationService, times(1)).saveNotification(argThat(notification ->
                 notification.getUserId().equals(sellerId)
@@ -37,5 +47,18 @@ class AuctionUnsoldEventListenerTest {
                         && notification.getData() != null
                         && auctionId.equals(notification.getData().get("auctionId"))
         ));
+    }
+
+    @Test
+    void onAuctionUnsold_ShouldHandleJsonErrorGracefully() throws Exception {
+        String invalidJson = "bukan json beneran";
+
+        when(objectMapper.readValue(invalidJson, AuctionUnsoldEvent.class))
+                .thenThrow(new RuntimeException("JSON Parsing Error"));
+
+        listener.onAuctionUnsold(invalidJson);
+
+        // Pastikan saveNotification TIDAK pernah dipanggil (times(0))
+        verify(notificationService, times(0)).saveNotification(any());
     }
 }
