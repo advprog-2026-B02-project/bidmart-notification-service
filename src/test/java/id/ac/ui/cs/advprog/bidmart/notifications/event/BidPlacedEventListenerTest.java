@@ -11,8 +11,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
@@ -100,5 +102,59 @@ class BidPlacedEventListenerTest {
 
         // total hanya 1 notifikasi
         verify(notificationService, times(1)).saveNotification(any());
+    }
+
+    @Test
+    void onBidPlaced_WithParticipants_ShouldNotifyFollowersWithoutDuplicates() throws Exception {
+        UUID participantId = UUID.randomUUID();
+        BidPlacedEvent mockEvent = new BidPlacedEvent(
+                auctionId,
+                sellerId,
+                bidderId,
+                new BigDecimal("150000"),
+                outbidUserId,
+                outbidHoldId,
+                bidderId,
+                List.of(participantId, bidderId, sellerId, outbidUserId)
+        );
+
+        String jsonPayload = "{\"dummy\":\"data-with-participants\"}";
+        when(objectMapper.readValue(jsonPayload, BidPlacedEvent.class)).thenReturn(mockEvent);
+
+        listener.onBidPlaced(jsonPayload);
+
+        verify(notificationService).saveNotification(argThat(notification ->
+                notification.getUserId().equals(participantId) &&
+                notification.getType() == NotificationType.BID_PLACED &&
+                auctionId.equals(notification.getData().get("auctionId"))
+        ));
+        verify(notificationService, times(3)).saveNotification(any());
+    }
+
+    @Test
+    void bidPlacedEvent_ShouldDeserializeBiddingServicePayload() throws Exception {
+        UUID participantId = UUID.randomUUID();
+        String payload = """
+                {
+                  "auctionId": "%s",
+                  "listingId": "%s",
+                  "sellerId": "%s",
+                  "newBidderId": "%s",
+                  "placedBidderId": "%s",
+                  "currentPrice": 150000,
+                  "bidCount": 2,
+                  "outbidUserId": "%s",
+                  "outbidHoldId": "%s",
+                  "participantUserIds": ["%s"]
+                }
+                """.formatted(
+                auctionId, UUID.randomUUID(), sellerId, bidderId, bidderId,
+                outbidUserId, outbidHoldId, participantId);
+
+        BidPlacedEvent event = new ObjectMapper().readValue(payload, BidPlacedEvent.class);
+
+        assertEquals(new BigDecimal("150000"), event.newBidAmount());
+        assertEquals(bidderId, event.placedBidderId());
+        assertEquals(List.of(participantId), event.participantUserIds());
     }
 }
