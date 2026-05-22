@@ -2,6 +2,7 @@ plugins {
     java
     id("org.springframework.boot") version "3.4.2"
     id("io.spring.dependency-management") version "1.1.7"
+    id("org.sonarqube") version "7.2.3.7755"
     jacoco
     checkstyle
 }
@@ -24,6 +25,10 @@ configurations {
 
 repositories {
     mavenCentral()
+}
+
+dependencyLocking {
+    lockAllConfigurations()
 }
 
 dependencies {
@@ -84,5 +89,14 @@ tasks.jacocoTestReport {
         xml.required.set(true)
         csv.required.set(false)
         html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco"))
+    }
+}
+
+sonar {
+    properties {
+        property("sonar.projectKey", "advprog-2026-B02-project_bidmart-notification-service")
+        property("sonar.organization", "advprog-2026-b02-project")
+        property("sonar.host.url", "https://sonarcloud.io")
+        property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
     }
 }

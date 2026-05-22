@@ -8,12 +8,12 @@ import org.apache.kafka.common.header.internals.RecordHeader;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
@@ -43,10 +43,10 @@ class OrderNotificationRequestConsumerIntegrationTest {
     @Autowired
     private ProcessedKafkaEventRepository processedKafkaEventRepository;
 
-    @MockBean
+    @MockitoBean
     private SimpMessagingTemplate messagingTemplate;
 
-    @SpyBean
+    @MockitoSpyBean
     private NotificationServiceImpl notificationService;
 
     @BeforeEach
@@ -57,7 +57,7 @@ class OrderNotificationRequestConsumerIntegrationTest {
     }
 
     @Test
-    void shouldConsumeKafkaEventAndPersistNotification() throws Exception {
+    void shouldConsumeKafkaEventAndPersistNotification() throws InterruptedException {
         UUID eventId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         UUID orderId = UUID.randomUUID();
@@ -75,7 +75,7 @@ class OrderNotificationRequestConsumerIntegrationTest {
     }
 
     @Test
-    void shouldSkipDuplicateEventId() throws Exception {
+    void shouldSkipDuplicateEventId() throws InterruptedException {
         UUID eventId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         UUID orderId = UUID.randomUUID();
@@ -95,7 +95,7 @@ class OrderNotificationRequestConsumerIntegrationTest {
     }
 
     @Test
-    void shouldRetryTransientFailureAndEventuallyPersistEvent() throws Exception {
+    void shouldRetryTransientFailureAndEventuallyPersistEvent() {
         UUID eventId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         UUID orderId = UUID.randomUUID();

@@ -30,7 +30,7 @@ class WinnerDeterminedEventListenerTest {
     private WinnerDeterminedEventListener listener;
 
     @Test
-    void testOnWinnerDetermined_ShouldSaveAuctionWonNotification() throws Exception {
+    void testOnWinnerDetermined_ShouldSaveAuctionWonNotification() {
         UUID auctionId = UUID.randomUUID();
         UUID winnerId = UUID.randomUUID();
         BigDecimal winningAmount = new BigDecimal("500000");

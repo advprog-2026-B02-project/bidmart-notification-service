@@ -82,7 +82,7 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void getNotifications_shouldLoadAllNotificationsWhenReadFilterMissing() throws Exception {
+    void getNotifications_shouldLoadAllNotificationsWhenReadFilterMissing() {
         Notification notification = sampleNotification("{\"auctionId\":\"" + auctionId + "\"}");
         Page<Notification> page = new PageImpl<>(List.of(notification), PageRequest.of(0, 10), 1);
 
@@ -100,7 +100,7 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void getNotifications_shouldFilterByReadStateWhenProvided() throws Exception {
+    void getNotifications_shouldFilterByReadStateWhenProvided() {
         Notification notification = sampleNotification("{\"status\":\"read\"}");
         Page<Notification> page = new PageImpl<>(List.of(notification), PageRequest.of(1, 5), 1);
 
@@ -158,17 +158,19 @@ class NotificationServiceImplTest {
     void markAsRead_shouldThrowWhenNotificationDoesNotExist() {
         when(notificationRepository.findById(notificationId)).thenReturn(Optional.empty());
 
+        UUID currentUserId = userId;
         assertThrows(ResponseStatusException.class,
-                () -> notificationService.markAsRead(notificationId, userId));
+                () -> notificationService.markAsRead(notificationId, currentUserId));
     }
 
     @Test
     void markAsRead_shouldThrowWhenUserDoesNotOwnNotification() {
         Notification notification = sampleNotification(null);
         when(notificationRepository.findById(notificationId)).thenReturn(Optional.of(notification));
+        UUID otherUserId = UUID.randomUUID();
 
         assertThrows(ResponseStatusException.class,
-                () -> notificationService.markAsRead(notificationId, UUID.randomUUID()));
+                () -> notificationService.markAsRead(notificationId, otherUserId));
     }
 
     @Test
