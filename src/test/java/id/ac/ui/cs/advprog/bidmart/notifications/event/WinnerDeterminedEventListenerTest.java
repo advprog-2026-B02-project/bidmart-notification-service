@@ -1,11 +1,13 @@
 package id.ac.ui.cs.advprog.bidmart.notifications.event;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.bidmart.notifications.model.NotificationType;
 import id.ac.ui.cs.advprog.bidmart.notifications.service.NotificationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
@@ -21,23 +23,30 @@ class WinnerDeterminedEventListenerTest {
     @Mock
     private NotificationService notificationService;
 
+    @Spy
+    private ObjectMapper objectMapper = new ObjectMapper();
+
     @InjectMocks
     private WinnerDeterminedEventListener listener;
 
     @Test
-    void testOnWinnerDetermined_ShouldSaveAuctionWonNotification() {
+    void testOnWinnerDetermined_ShouldSaveAuctionWonNotification() throws Exception {
         UUID auctionId = UUID.randomUUID();
         UUID winnerId = UUID.randomUUID();
         BigDecimal winningAmount = new BigDecimal("500000");
-        WinnerDeterminedEvent event = new WinnerDeterminedEvent(auctionId, winnerId, winningAmount);
+        
+        String jsonPayload = String.format(
+            "{\"auctionId\":\"%s\",\"winners\":[{\"userId\":\"%s\",\"amount\":%s}]}",
+            auctionId, winnerId, winningAmount
+        );
 
-        listener.onWinnerDetermined(event);
+        listener.onWinnerDetermined(jsonPayload);
 
         verify(notificationService, times(1)).saveNotification(argThat(notification ->
                 notification.getUserId().equals(winnerId)
                         && notification.getType() == NotificationType.AUCTION_WON
                         && notification.getData() != null
-                        && auctionId.equals(notification.getData().get("auctionId"))
+                        && auctionId.toString().equals(notification.getData().get("auctionId"))
                         && winningAmount.equals(notification.getData().get("winningAmount"))
         ));
     }
