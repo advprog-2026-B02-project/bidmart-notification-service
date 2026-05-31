@@ -17,6 +17,7 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.ignoringRequestMatchers(
                     new AntPathRequestMatcher("/internal/**"),
+                    new AntPathRequestMatcher("/api/v1/notifications/**"),
                     new AntPathRequestMatcher("/ws/**"),
                     new AntPathRequestMatcher("/api/notifications/ws/**"),
                     new AntPathRequestMatcher("/h2-console/**")))
